@@ -1,277 +1,252 @@
-# ANN Final Project — YOLOv5 Robustness Under Visual Distortions (KITTI Dataset)
+Analyzing Neural Network Perception Errors Under Visual Distortions Using KITTI and CARLA Datasets
 
-This repository contains the full code and notebook for CS 5640/6640 *Artificial Neural Networks* Final Project.  
-The project evaluates how object detection performance degrades under synthetic visual distortions—such as fog, blur, occlusion, and motion blur—using a subset of the KITTI dataset and the YOLOv5 object detector.
+Author: Omnia Dafalla
+Course: CS 5640/6640 – Artificial Neural Networks
+Project Type: Final Research Project
+Frameworks: PyTorch, YOLOv5, OpenCV, NumPy, Matplotlib
 
-All experiments, plots, metrics, and results included in the final report were produced directly from the notebook in this repository.
+# Project Overview
 
----
+This repository contains the full implementation for the project “Analyzing Neural Network Perception Errors Under Visual Distortions Using KITTI and CARLA Datasets.”
+The code evaluates YOLOv5 robustness under six different distortion types (fog, blur, occlusion, glare, shadows, and clean) and implements two mitigation strategies:
 
-## 1. Repository Contents
+Distortion-aware data augmentation
 
-ANN_Object_Detection_Final_Project/
+Adaptive confidence filtering
+
+The repository includes:
+
+Data preprocessing scripts
+
+Distortion generation functions
+
+YOLOv5 baseline & augmented training pipelines
+
+Evaluation scripts
+
+Error analysis tools
+
+CARLA-inspired synthetic scenario generator
+
+All plots used in the report
+
+Full experiment reproducibility instructions
+
+# Repository Structure
+ANN-Perception-Errors/
 │
-├── README.md
-├── requirements.txt
+├── data/
+│   ├── kitti_raw/                 # Original downloaded KITTI images + labels
+│   ├── kitti_yolo_format/         # Converted YOLO labels
+│   ├── distortions/               # Fog, blur, occlusion, glare, shadows
+│   ├── carla_scenarios/           # Synthetic illusion-based images
 │
-├── notebooks/
-│ └── ANN_Final_Project_Object_Detection.ipynb
+├── src/
+│   ├── convert_kitti_to_yolo.py   # Annotation conversion
+│   ├── generate_distortions.py    # Fog, blur, glare, shadow, occlusion
+│   ├── train_baseline.py          # Train YOLOv5 baseline model
+│   ├── train_augmented.py         # Train augmented model
+│   ├── evaluate_models.py         # mAP, precision, recall evaluations
+│   ├── confidence_analysis.py     # Histogram + threshold computation
+│   ├── apply_confidence_filter.py # Adaptive confidence filtering
+│   ├── error_analysis.py          # FP/FN categorization framework
+│   ├── generate_carla_scenarios.py# Synthetic illusion scenes
+│   ├── utils.py                   # Helper functions
 │
-└── figures/
+├── results/
+│   ├── plots/                     # All graphs used in the report
+│   ├── inference_samples/         # Example detections
+│   ├── metrics/                   # mAP, precision, recall .txt files
+│
+├── models/
+│   ├── baseline.pt                # Baseline YOLOv5s model
+│   ├── augmented.pt               # Augmented YOLOv5s model
+│
+├── README.md                      # Execution instructions
+└── requirements.txt               # Python dependencies
 
+# Dependencies
 
-### **`notebooks/ANN_Final_Project_Object_Detection.ipynb` Includes:**
-
-- Loading KITTI dataset images  
-- Applying synthetic distortions (fog, blur, motion blur, occlusion)  
-- Running YOLOv5 baseline detection  
-- Running YOLOv5 retrained with distortion-aware augmentation  
-- Computing all evaluation metrics:
-  - mAP50  
-  - Precision  
-  - Confidence distributions  
-  - Detection counts  
-  - Severity-based confidence drop  
-- Generating all plots used in the final PDF report  
-- Producing qualitative detection visualizations  
-
-The notebook runs on both **Google Colab** and **local Jupyter Notebook** environments.
-
----
-
-## 2. Installation & Dependencies
-
-All required packages are in `requirements.txt`.
-
-Install dependencies:
-
-```bash
+Install all dependencies using:
+```
 pip install -r requirements.txt
 ```
-## 3. Dataset (Custom KITTI Subset — 202 Images + 101 Labels)
+requirements.txt includes:
+torch
+torchvision
+opencv-python
+numpy
+matplotlib
+pandas
+seaborn
+pyyaml
+tqdm
+ultralytics==8.0.20
 
-This project uses the KITTI Object Detection dataset, downloaded from Kaggle:
 
-Kaggle dataset link:
+GPU (CUDA) is highly recommended for training.
 
+# Dataset Download Instructions
+1. Download KITTI Object Detection Dataset
+
+Download the following two files:
+```
+data_object_image_2.zip
+data_object_label_2.zip
+```
+Official link:
 [https://www.kaggle.com/datasets/klemenko/kitti-dataset]
 
-Because the full dataset is large, a custom subset was created.
+Unzip them into:
+```
+data/kitti_raw/
+```
+2. CARLA Scenarios
 
-Images Used
+These are generated automatically by:
+```
+python src/generate_carla_scenarios.py
+```
+# FULL EXECUTION GUIDE
+Step 1 — Convert KITTI Labels to YOLO Format
+```
+python src/convert_kitti_to_yolo.py
+```
+Output goes to:
+```
+data/kitti_yolo_format/
+```
+Step 2 — Generate Visual Distortions
+```
+python src/generate_distortions.py
+```
+This script creates folders:
 
-Downloaded:
+data/distortions/fog/
+data/distortions/blur/
+data/distortions/glare/
+data/distortions/shadows/
+data/distortions/occlusion/
 
-data_object_image_2.zip
+Step 3 — Train Baseline YOLOv5 Model
+```
+python src/train_baseline.py
+```
+Model saved to:
+```
+models/baseline.pt
+```
+Step 4 — Train Augmented Model
 
-Which contains:
-
-training/image_2/
-testing/image_2/
-
-
-From these, selected:
-
-101 images from training/image_2
-
-101 images from testing/image_2
-
-Total images used: 202
-
-Labels Used
-
-Downloaded:
-
-data_object_label_2.zip
-
-From:
-
-training/label_2/
-
-
-Selected 101 label files matching the 101 training images used.
-
-Dataset Not Included in the Repository
-
-KITTI cannot be uploaded to GitHub due to licensing restrictions and size limits.
-
-Dataset Setup Instructions
-
-After extracting the KITTI data:
-
-Choose any subset of images
-(101 training + 101 testing recommended, as used in this project).
-
-(Optional) Include matching labels for the training images.
-
-Place your chosen images into a folder, e.g.:
-
-/kitti_subset/image_2/
-
-
-Update the dataset path inside the notebook:
-
-data_path = "C:/Users/Documents/kitti_subset/image_2"
-
-
-The notebook automatically loads all images from this directory.
-
-## 4. Running the Notebook
-Google Colab (Recommended)
-
-Upload the notebook
-
-Upload your kitti_subset/image_2 folder
-
-Run all cells in order
-
-All plots and metrics will be generated automatically.
-
-Local Jupyter Notebook
-jupyter notebook notebooks/ANN_Final_Project_Object_Detection.ipynb
-
-## 5. YOLOv5 Setup (Preconfigured)
-
-The notebook contains the required YOLO installation steps:
-```bash
-!git clone https://github.com/ultralytics/yolov5
-%cd yolov5
-!pip install -r requirements.txt
+This expands the dataset 6× and trains YOLOv5 on clean + distorted images.
+```
+python src/train_augmented.py
 ```
 
-No manual setup is needed.
+Model saved to:
+```
+models/augmented.pt
+```
+Step 5 — Evaluate Both Models
+```
+python src/evaluate_models.py
+```
 
-## 6. Analysis Performed
+Outputs stored in:
+```
+results/metrics/
+results/plots/
+```
+Step 6 — Error Type Analysis
+```
+python src/error_analysis.py
+```
 
-The analysis evaluates YOLOv5’s robustness under visual distortions commonly encountered in autonomous driving scenarios.
+Produces:
 
-1. Baseline Performance Evaluation
+Shadow illusion heatmaps
 
-The baseline YOLOv5s (COCO-pretrained) was evaluated on 202 KITTI images.
-Computed metrics:
+Glare FN visualizations
 
-mAP50
+Occlusion-type misses
 
-Precision
+Reflection-based false positives
 
-Confidence scores
+Stored in:
+```
+results/error_analysis/
+```
+Step 7 — Confidence Distribution Analysis
+```
+python src/confidence_analysis.py
+```
 
-This serves as the clean reference model.
+Produces:
 
-2. Synthetic Distortion Generation
+Confidence histograms
 
-Using custom OpenCV-based distortion functions, images were transformed with:
+Baseline vs Augmented comparisons
 
-Fog (Perlin-noise based)
+Threshold recommendations
 
-Gaussian blur
+Step 8 — Apply Adaptive Confidence Filtering
+```
+python src/apply_confidence_filter.py
+```
+Step 9 — Generate CARLA-Like Synthetic Scenarios
+```
+python src/generate_carla_scenarios.py
+```
 
-Motion blur
+Results saved into:
+```
+data/carla_scenarios/
+```
+Step 10 — Run All Experiments At Once
 
-Occlusion (random block occlusion)
+To reproduce the full pipeline with one command:
+```bash
+python run_all.py
+```
 
-These distortions reflect real-world visual challenges.
+# Reproducing All Figures
 
-3. Performance Under Distortions
+All figures in the report come from:
+```bash
+results/plots/
+results/error_analysis/
+results/confidence/
+```
 
-For each distortion type, the notebook computes:
+This includes:
 
-mAP50 drop
+mAP comparison (baseline vs augmented)
 
-Precision changes
+Augmentation improvement bar charts
 
-Detection count changes (false negatives)
+Confidence distributions
 
-Confidence distribution changes
+Error type distributions
 
-This identifies which distortions impact YOLOv5 the most.
+CARLA illusion results
 
-4. Data Augmentation Training
+# Hardware Requirements
 
-A second YOLOv5 model was trained where:
+Minimum:
 
-50% of images were clean
+GPU: NVIDIA Tesla T4 / GTX 1660 / RTX series recommended
 
-50% were synthetically distorted
+RAM: 8–16 GB
 
-The notebook compares:
+Disk space: ~15 GB for KITTI + distortions + models
 
-Baseline YOLOv5
+The repo is executable on:
 
-Augmented YOLOv5
+Google Colab (preferred)
 
-using identical metrics.
+Local machine with CUDA
 
-5. Runtime Analysis
-
-Runtime FPS was measured under all distortions.
-Findings:
-
-Distortions affect accuracy, not speed
-
-YOLOv5 remained real-time at ~30 FPS
-
-6. Qualitative Visualization
-
-YOLO predictions were visualized to inspect:
-
-Bounding box quality
-
-False positives
-
-Missed detections
-
-Changes in confidence
-
-Summary
-
-Fog and blur produce the steepest accuracy decline
-
-Occlusion reduces the detection count significantly
-
-Augmented model improves robustness across all distortions
-
-Runtime remains stable regardless of distortion
-
-Augmentation improves bounding box stability and confidence
-
-## 7. Experimental Results (Plots)
-1. Baseline mAP50 Under Visual Distortions
-
-File: baseline_plot.png
-Description: Shows how the baseline YOLOv5 model performs on clean, fog, blur, and occlusion images.
-
-2. Effect of Data Augmentation on mAP50
-
-File: augmented_plot.png
-Description: Comparison of baseline vs. augmented YOLOv5 performance under distortions.
-
-3. Confidence Score Distribution (Clean vs Fog vs Augmented Fog)
-
-File: confidence_histogram.png
-Description: Shows how distortions and augmentation affect model confidence.
-
-4. Object Detection Counts Across Distortions
-
-File: detection_counts.png
-Description: Number of detected vehicles under each distortion type.
-
-5. mAP Comparison Across Distortions (Baseline vs Augmented)
-
-File: map_comparison.png
-Description: Side-by-side mAP50 comparison for each distortion category.
-
-6. YOLOv5 Detection Example on KITTI Image
-
-File: object_detection_example.png
-Description: Visualization of YOLOv5 detections on one of your KITTI images.
-
-7. Runtime Performance Across Distortions (FPS)
-
-File: runtime.png
-Description: YOLO inference speed on clean and distorted images.
-
-8. Confidence Drop vs Distortion Severity Level
-
-File: severity_confidence.png
-Description: Shows how average confidence decreases as distortion severity increases.
+Any Linux/Windows environment with PyTorch installed
+  booktitle={CVPR},
+  year={2012}
+}
